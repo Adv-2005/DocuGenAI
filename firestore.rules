@@ -1,0 +1,149 @@
+/**
+ * Core Philosophy: This ruleset enforces a strict user-ownership model where all data is private and controlled exclusively by the user who created it. Access control is based on the user's authenticated UID.
+ *
+ * Data Structure: All data is nested hierarchically under the /users/{userId} path. This structure naturally segregates each user's data, such as their repository connections and feedback, into private subcollections. This design makes ownership clear and authorization checks efficient.
+ *
+ * Key Security Decisions:
+ * - User Enumeration is Disabled: Listing the top-level `/users` collection is explicitly forbidden to protect user privacy.
+ * - Strict Ownership: All subcollections (/repositoryConnections, /documentationFeedback) are only accessible to the owner of the parent user document.
+ * - Default Deny: The default security posture is to deny all access unless a specific rule grants it.
+ * - User Profile Creation: Users are permitted to create their own user document upon sign-up, but they cannot modify critical identifiers like their user ID post-creation.
+ *
+ * Denormalization for Authorization: This ruleset leverages path-based authorization. By placing all data under a user-specific path `/users/{userId}`, we can use the `userId` from the path for all security checks. This eliminates the need for slow and costly `get()` calls to other documents for authorization decisions.
+ *
+ * Structural Segregation: The entire data model is based on structural segregation. All private user data is confined within the `/users/{userId}` tree, cleanly separating it from any potential future public collections.
+ */
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // --------------------------------------------------------------------
+    // Helper Functions
+    // --------------------------------------------------------------------
+
+    /**
+     * Checks if the user is authenticated.
+     */
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    /**
+     * Checks if the authenticated user's UID matches the provided userId.
+     * This is the primary function for enforcing user ownership.
+     */
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    /**
+     * Checks for ownership on an existing document. Used for update and delete
+     * operations to prevent acting on non-existent data.
+     */
+    function isExistingOwner(userId) {
+      return isOwner(userId) && resource != null;
+    }
+
+    /**
+     * Validates that the `id` field in a new User document matches the
+     * document's ID in the path, ensuring relational integrity.
+     */
+    function hasValidUserDataOnCreate(userId) {
+      return request.resource.data.id == userId;
+    }
+
+    /**
+     * Enforces immutability of the User's `id` field during updates.
+     */
+    function isUserDataImmutableOnUpdate() {
+      return request.resource.data.id == resource.data.id;
+    }
+
+    /**
+     * Validates that the `userId` field in a new RepositoryConnection document
+     * matches the owner's ID from the path.
+     */
+    function hasValidRepoConnectionDataOnCreate(userId) {
+      return request.resource.data.userId == userId;
+    }
+
+    /**
+     * Enforces immutability of the `userId` field in a RepositoryConnection
+     * document during updates.
+     */
+    function isRepoConnectionDataImmutableOnUpdate() {
+      return request.resource.data.userId == resource.data.userId;
+    }
+
+    /**
+     * Validates that the `userId` field in a new DocumentationFeedback
+     * document matches the owner's ID from the path.
+     */
+    function hasValidFeedbackDataOnCreate(userId) {
+      return request.resource.data.userId == userId;
+    }
+
+    /**
+     * Enforces immutability of the `userId` field in a DocumentationFeedback
+     * document during updates.
+     */
+    function isFeedbackDataImmutableOnUpdate() {
+      return request.resource.data.userId == resource.data.userId;
+    }
+
+    // --------------------------------------------------------------------
+    // Collection Rules
+    // --------------------------------------------------------------------
+
+    /**
+     * @description Manages user profile documents. A user can create their own profile,
+     *              and can read, update, or delete it. Listing all users is forbidden.
+     * @path        /users/{userId}
+     * @allow       (create) A new user with auth.uid='user_123' creating their own document at /users/user_123.
+     * @deny        (list) Any user trying to query the /users collection to see all users.
+     * @deny        (get) User 'user_abc' trying to read the document at /users/user_xyz.
+     * @principle   Enforces Self-Creation and Ownership. Prevents user data enumeration.
+     */
+    match /users/{userId} {
+      allow get: if isOwner(userId);
+      allow list: if false;
+      allow create: if isOwner(userId) && hasValidUserDataOnCreate(userId);
+      allow update: if isExistingOwner(userId) && isUserDataImmutableOnUpdate();
+      allow delete: if isExistingOwner(userId);
+
+      /**
+       * @description Secures a user's private list of repository connections.
+       *              Only the user can manage their own connections.
+       * @path        /users/{userId}/repositoryConnections/{provider}
+       * @allow       (list) User 'user_123' listing all documents in their own /users/user_123/repositoryConnections subcollection.
+       * @allow       (create) User 'user_123' adding a new document to /users/user_123/repositoryConnections.
+       * @deny        (get) User 'user_abc' trying to read a document from /users/user_xyz/repositoryConnections.
+       * @principle   Restricts access to a user's own data tree using path-based ownership.
+       */
+      match /repositoryConnections/{provider} {
+        allow get: if isOwner(userId);
+        allow list: if isOwner(userId);
+        allow create: if isOwner(userId);
+        allow update: if isExistingOwner(userId);
+        allow delete: if isExistingOwner(userId);
+      }
+
+      /**
+       * @description Secures a user's private documentation feedback.
+       *              Only the user can create, view, and manage their own feedback entries.
+       * @path        /users/{userId}/documentationFeedback/{documentationFeedbackId}
+       * @allow       (list) User 'user_123' listing all feedback they have submitted under /users/user_123/documentationFeedback.
+       * @allow       (create) User 'user_123' creating a new feedback document in their subcollection.
+       * @deny        (update) User 'user_abc' trying to modify feedback belonging to 'user_xyz'.
+       * @principle   Restricts access to a user's own data tree using path-based ownership.
+       */
+      match /documentationFeedback/{documentationFeedbackId} {
+        allow get: if isOwner(userId);
+        allow list: if isOwner(userId);
+        allow create: if isOwner(userId) && hasValidFeedbackDataOnCreate(userId);
+        allow update: if isExistingOwner(userId) && isFeedbackDataImmutableOnUpdate();
+        allow delete: if isExistingOwner(userId);
+      }
+    }
+  }
+}
