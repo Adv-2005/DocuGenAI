@@ -121,44 +121,44 @@ export function RepositoryList({
 
   return (
     <div className="space-y-2">
-      <Table>
-        <TableHeader>
+    <Table>
+      <TableHeader>
           <TableRow className="border-b-2 hover:bg-transparent">
             <TableHead className="font-semibold">Name</TableHead>
             <TableHead className="font-semibold">Provider</TableHead>
             <TableHead className="font-semibold">Last Updated</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
           {repos.map((repo, index) => (
             <TableRow 
               key={repo.id} 
               className="hover:bg-gradient-to-r hover:from-indigo-50/50 hover:to-blue-50/50 transition-all duration-300 cursor-pointer border-b hover:border-primary/20 animate-fade-in"
               style={{ animationDelay: `${index * 0.05}s` }}
             >
-              <TableCell className="font-medium">
-                <Link
+            <TableCell className="font-medium">
+              <Link
                   href={`/repositories/${encodeURIComponent(repo.full_name)}`}
                   className="hover:text-primary transition-colors duration-200 font-semibold group"
-                >
+              >
                   <span className="group-hover:underline">{repo.full_name}</span>
-                </Link>
-              </TableCell>
-              <TableCell>
-                <div className="flex items-center gap-2">
+              </Link>
+            </TableCell>
+            <TableCell>
+              <div className="flex items-center gap-2">
                   <div className="p-1.5 rounded-md bg-slate-100 group-hover:bg-indigo-100 transition-colors">
-                    {providerIcons['github']}
+                {providerIcons['github']}
                   </div>
                   <span className="capitalize font-medium">github</span>
-                </div>
-              </TableCell>
+              </div>
+            </TableCell>
               <TableCell className="text-muted-foreground">
-                {new Date(repo.updated_at).toLocaleDateString()}
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+              {new Date(repo.updated_at).toLocaleDateString()}
+            </TableCell>
+          </TableRow>
+        ))}
+      </TableBody>
+    </Table>
     </div>
   );
 }

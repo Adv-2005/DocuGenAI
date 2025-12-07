@@ -31,28 +31,28 @@ export function MainNav() {
       {navItems.map((item, index) => {
         const isActive = item.href === "/" ? pathname === "/" : pathname.startsWith(item.href);
         return (
-          <SidebarMenuItem key={item.href}>
-            <SidebarMenuButton
-              asChild
+        <SidebarMenuItem key={item.href}>
+          <SidebarMenuButton
+            asChild
               isActive={isActive}
-              tooltip={{ children: item.label, side: "right", align: "center" }}
+            tooltip={{ children: item.label, side: "right", align: "center" }}
               className={`transition-all duration-300 ${
                 isActive 
                   ? 'bg-gradient-to-r from-indigo-600 to-blue-600 dark:from-purple-600 dark:to-violet-600 text-white shadow-lg' 
                   : 'hover:bg-slate-100 dark:hover:bg-zinc-800 hover:text-primary'
               }`}
-            >
+          >
               <Link 
                 href={item.href}
                 className="flex items-center gap-3 group"
               >
                 <span className={`transition-transform duration-300 ${isActive ? 'scale-110' : 'group-hover:scale-110'}`}>
-                  {item.icon}
+              {item.icon}
                 </span>
                 <span className="font-medium">{item.label}</span>
-              </Link>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
+            </Link>
+          </SidebarMenuButton>
+        </SidebarMenuItem>
         );
       })}
     </SidebarMenu>

@@ -70,9 +70,9 @@ export default function RootLayout({
       </head>
       <body className="font-body antialiased">
         <ThemeProvider>
-          <FirebaseClientProvider>
-            <AppLayout>{children}</AppLayout>
-          </FirebaseClientProvider>
+        <FirebaseClientProvider>
+          <AppLayout>{children}</AppLayout>
+        </FirebaseClientProvider>
         </ThemeProvider>
         <Toaster />
       </body>
