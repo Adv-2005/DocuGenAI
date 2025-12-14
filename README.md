@@ -1,4 +1,4 @@
-# DocuGenAI
+TEst1# DocuGenAI
 
 Next.js app that connects to code repositories and generates documentation with AI. The UI is built with shadcn/ui and Tailwind, and Firebase is used for auth + data.
 
