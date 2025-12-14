@@ -75,41 +75,41 @@ export default function RepositoriesPage() {
     try {
       // Link GitHub account via popup
       const result = await linkWithPopup(auth.currentUser, provider);
-      const credential = GithubAuthProvider.credentialFromResult(result);
-      const accessToken = credential?.accessToken;
+        const credential = GithubAuthProvider.credentialFromResult(result);
+        const accessToken = credential?.accessToken;
 
       if (!accessToken || !auth.currentUser) {
         throw new Error('Could not retrieve access token from GitHub.');
       }
 
       // Save repository connection to Firestore
-      await setRepositoryConnection(firestore, auth.currentUser.uid, {
-        platform: 'github',
-        accessToken: accessToken,
-      });
+          await setRepositoryConnection(firestore, auth.currentUser.uid, {
+            platform: 'github',
+            accessToken: accessToken,
+          });
 
-      toast({
-        title: 'GitHub Connected',
-        description: 'Your GitHub account has been successfully linked.',
-      });
+          toast({
+            title: 'GitHub Connected',
+            description: 'Your GitHub account has been successfully linked.',
+          });
     } catch (error: any) {
-      console.error('GitHub link error:', error);
+        console.error('GitHub link error:', error);
 
       // Handle specific error cases
-      if (error.code === 'auth/credential-already-in-use') {
-        setShowCredentialInUseAlert(true);
+        if (error.code === 'auth/credential-already-in-use') {
+          setShowCredentialInUseAlert(true);
         return;
       }
 
       // Show appropriate error message
       const errorDescription =
-        error.code === 'auth/account-exists-with-different-credential'
+            error.code === 'auth/account-exists-with-different-credential'
           ? 'An account with this email already exists. Please sign in with the original method to link your GitHub account.'
           : 'Could not connect to GitHub. Please try again.';
 
-      toast({
-        variant: 'destructive',
-        title: 'Connection Failed',
+          toast({
+            variant: 'destructive',
+            title: 'Connection Failed',
         description: errorDescription,
       });
     }

@@ -115,7 +115,7 @@ export default function RepositoryPage({
     });
   };
 
-  return (
+    return (
     <div className="flex flex-1 flex-col gap-6 p-4 md:gap-8 md:p-8 animate-fade-in">
       <div className="animate-slide-in-left">
         <h1 className="font-headline text-4xl font-bold gradient-text mb-2">{repo.name}</h1>
@@ -164,10 +164,10 @@ export default function RepositoryPage({
               </div>
             </div>
             <div className="relative">
-              <Textarea
-                value={docContent}
-                onChange={(e) => setDocContent(e.target.value)}
-                placeholder="Click 'Auto-Generate' to create an architecture overview..."
+            <Textarea
+              value={docContent}
+              onChange={(e) => setDocContent(e.target.value)}
+              placeholder="Click 'Auto-Generate' to create an architecture overview..."
                 className="min-h-[500px] rounded-xl border-2 bg-white/90 dark:bg-zinc-900/90 backdrop-blur-sm p-6 font-code text-sm shadow-xl focus:border-primary/50 focus:ring-2 focus:ring-primary/20 transition-all duration-300"
               />
               {isGenerating && (
